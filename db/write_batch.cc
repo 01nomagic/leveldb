@@ -7,8 +7,8 @@
 //    count: fixed32
 //    data: record[count]
 // record :=
-//    kTypeValue varstring varstring         |
-//    kTypeDeletion varstring
+//    kTypeValue varstring varstring（增加）         |
+//    kTypeDeletion varstring（删除）
 // varstring :=
 //    len: varint32
 //    data: uint8[len]
@@ -84,6 +84,7 @@ int WriteBatchInternal::Count(const WriteBatch* b) {
 }
 
 void WriteBatchInternal::SetCount(WriteBatch* b, int n) {
+  // 设置count的值
   EncodeFixed32(&b->rep_[8], n);
 }
 
@@ -98,7 +99,9 @@ void WriteBatchInternal::SetSequence(WriteBatch* b, SequenceNumber seq) {
 void WriteBatch::Put(const Slice& key, const Slice& value) {
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
   rep_.push_back(static_cast<char>(kTypeValue));
+  // 添加key的长度和内容信息到rep_后面
   PutLengthPrefixedSlice(&rep_, key);
+  // 添加value的长度和内容信息到rep_后面
   PutLengthPrefixedSlice(&rep_, value);
 }
 
