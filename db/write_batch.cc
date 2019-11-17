@@ -48,6 +48,7 @@ Status WriteBatch::Iterate(Handler* handler) const {
   input.remove_prefix(kHeader);
   Slice key, value;
   int found = 0;
+  //// 一条条操作记录写到内容中去
   while (!input.empty()) {
     found++;
     char tag = input[0];
@@ -89,6 +90,7 @@ void WriteBatchInternal::SetCount(WriteBatch* b, int n) {
 }
 
 SequenceNumber WriteBatchInternal::Sequence(const WriteBatch* b) {
+  //// 获取存在在前面8字节的sequence number
   return SequenceNumber(DecodeFixed64(b->rep_.data()));
 }
 
@@ -98,6 +100,7 @@ void WriteBatchInternal::SetSequence(WriteBatch* b, SequenceNumber seq) {
 
 void WriteBatch::Put(const Slice& key, const Slice& value) {
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
+  // 添加日志类型，kTypeValue表示添加数据
   rep_.push_back(static_cast<char>(kTypeValue));
   // 添加key的长度和内容信息到rep_后面
   PutLengthPrefixedSlice(&rep_, key);
@@ -107,6 +110,7 @@ void WriteBatch::Put(const Slice& key, const Slice& value) {
 
 void WriteBatch::Delete(const Slice& key) {
   WriteBatchInternal::SetCount(this, WriteBatchInternal::Count(this) + 1);
+  // 添加日志类型，kTypeDeletion表示删除数据
   rep_.push_back(static_cast<char>(kTypeDeletion));
   PutLengthPrefixedSlice(&rep_, key);
 }
@@ -147,6 +151,7 @@ void WriteBatchInternal::SetContents(WriteBatch* b, const Slice& contents) {
 void WriteBatchInternal::Append(WriteBatch* dst, const WriteBatch* src) {
   SetCount(dst, Count(dst) + Count(src));
   assert(src->rep_.size() >= kHeader);
+  // 将srckHeader后面的数据拷贝到dst中
   dst->rep_.append(src->rep_.data() + kHeader, src->rep_.size() - kHeader);
 }
 

@@ -43,6 +43,8 @@ Status Writer::AddRecord(const Slice& slice) {
   do {
     const int leftover = kBlockSize - block_offset_;
     assert(leftover >= 0);
+    //// 如果当前block剩余的字节数小于kHeaderSize（7字节）
+    //// 则写到下一个block，当前block剩余的字节用0填充
     if (leftover < kHeaderSize) {
       // Switch to a new block
       if (leftover > 0) {
@@ -56,12 +58,14 @@ Status Writer::AddRecord(const Slice& slice) {
     // Invariant: we never leave < kHeaderSize bytes in a block.
     assert(kBlockSize - block_offset_ - kHeaderSize >= 0);
 
+    //// 当前block可以使用的空间
     const size_t avail = kBlockSize - block_offset_ - kHeaderSize;
     const size_t fragment_length = (left < avail) ? left : avail;
 
     RecordType type;
     const bool end = (left == fragment_length);
     if (begin && end) {
+      //// 当前block可以放下
       type = kFullType;
     } else if (begin) {
       type = kFirstType;
