@@ -120,6 +120,7 @@ class Version {
 
   class LevelFileNumIterator;
 
+  //// 禁止隐式将VersionSet类型转化为Version类型
   explicit Version(VersionSet* vset)
       : vset_(vset),
         next_(this),
@@ -307,6 +308,7 @@ class VersionSet {
   // Opened lazily
   WritableFile* descriptor_file_;
   log::Writer* descriptor_log_;
+  //// 看逻辑应该是双向列表的结尾才合理，因为prev_表示的是后面插入的元素
   Version dummy_versions_;  // Head of circular doubly-linked list of versions.
   Version* current_;        // == dummy_versions_.prev_
 

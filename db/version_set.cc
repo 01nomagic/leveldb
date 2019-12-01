@@ -925,6 +925,7 @@ Status VersionSet::Recover(bool* save_manifest) {
         builder.Apply(&edit);
       }
 
+      //// 根据edit设置
       if (edit.has_log_number_) {
         log_number = edit.log_number_;
         have_log_number = true;

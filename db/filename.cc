@@ -120,6 +120,7 @@ bool ParseFileName(const std::string& filename, uint64_t* number,
   return true;
 }
 
+//// 创建CURRENT文件，并且设置内容为当前MANIFEST文件名称
 Status SetCurrentFile(Env* env, const std::string& dbname,
                       uint64_t descriptor_number) {
   // Remove leading "dbname/" and add newline to manifest file name
