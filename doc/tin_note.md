@@ -17,6 +17,9 @@ DB::Open
 		VersionSet::Recover
 			使用当前的Version（空的）创建新的Builder
 			从MANIFEST中读取VersionEdit内容，解码后apply到builder中，生成一个新的Version，并添加到双向链表中
+		比较MANIFEST记录的文件跟文件系统中实际存在的文件是否一一匹配
+		DBImpl::RecoverLogFile
+			读取每一个.log文件，将操作记录整合成batch并写入内存表memtable
 			
 ```
 

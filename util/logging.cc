@@ -48,6 +48,7 @@ std::string EscapeString(const Slice& value) {
   return r;
 }
 
+//// 将字符串类型的数字，转化为数字类型
 bool ConsumeDecimalNumber(Slice* in, uint64_t* val) {
   // Constants that will be optimized away.
   constexpr const uint64_t kMaxUint64 = std::numeric_limits<uint64_t>::max();
