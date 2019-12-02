@@ -1,0 +1,12 @@
+旧式类型转换
+(type) e
+
+新式类型转换
+static_cast<type> e
+dynamic_cast<type*> e
+dynamic_cast<type&> e
+dynamic_cast<type&&> e
+const_cast<type> e
+reinterpret_cast<type> e
+
+新式类型转换比旧式的要更容易识别

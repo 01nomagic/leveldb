@@ -296,14 +296,16 @@ Status DBImpl::Recover(VersionEdit* edit, bool* save_manifest) {
   // may already exist from a previous failed creation attempt.
   env_->CreateDir(dbname_);
   assert(db_lock_ == nullptr);
-  // 获取LOCK文件，成功表示当前打开数据库正常，同时禁止其他后来者打开该数据库
+  //// 获取LOCK文件，成功表示当前打开数据库正常，同时禁止其他后来者打开该数据库
   Status s = env_->LockFile(LockFileName(dbname_), &db_lock_);
   if (!s.ok()) {
     return s;
   }
 
+  //// 检查CURRENT文件是否存在
   if (!env_->FileExists(CurrentFileName(dbname_))) {
     if (options_.create_if_missing) {
+      //// 第一次创建数据库（生成MANIFEST和CURRENT文件）
       s = NewDB();
       if (!s.ok()) {
         return s;
@@ -1201,15 +1203,15 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
   w.sync = options.sync;
   w.done = false;
 
-  // 申请锁
+  //// 申请锁
   MutexLock l(&mutex_);
   writers_.push_back(&w);
   while (!w.done && &w != writers_.front()) {
-    // 没有完成并且不是排在第一位，则等待通知
+    //// 没有完成并且不是排在第一位，则等待通知
     w.cv.Wait();
   }
   if (w.done) {
-    // 如果当前写操作被合并执行了，则直接返回
+    //// 如果当前写操作被合并执行了，则直接返回
     return w.status;
   }
 
@@ -1218,7 +1220,7 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
   uint64_t last_sequence = versions_->LastSequence();
   Writer* last_writer = &w;
   if (status.ok() && updates != nullptr) {  // nullptr batch is for compactions
-    // 注意last_writer会被里面修改，如果有其他写操作可以合并的话
+    //// 注意last_writer会被里面修改，如果有其他写操作可以合并的话
     WriteBatch* write_batch = BuildBatchGroup(&last_writer);
     WriteBatchInternal::SetSequence(write_batch, last_sequence + 1);
     last_sequence += WriteBatchInternal::Count(write_batch);
@@ -1229,11 +1231,11 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     // into mem_.
     {
       mutex_.Unlock();
-      // 尽量减少锁的影响，能不锁的就不锁
-      // 之所以有可能writers中有多条记录，是因为这里释放了锁
-      // 所以这个时间点可能又添加了多个写操作，导致下一次处理写操作时可能出现合并的情况
+      //// 尽量减少锁的影响，能不锁的就不锁
+      //// 之所以有可能writers中有多条记录，就是因为这里释放了锁
+      //// 所以这个时间点可能又添加了多个写操作，导致下一次处理写操作时可能出现合并的情况
 
-      // 1. 将写记录先写到log文件中
+      //// 1. 将写记录先写到log文件中
       status = log_->AddRecord(WriteBatchInternal::Contents(write_batch));
       bool sync_error = false;
       if (status.ok() && options.sync) {
@@ -1243,10 +1245,10 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
         }
       }
       if (status.ok()) {
-        // 2. 再将写入的数据放到内存中
+        //// 2. 再将写入的数据放到内存中
         status = WriteBatchInternal::InsertInto(write_batch, mem_);
       }
-      // 这里是不是可以不用在锁了？？？
+      //// 这里是不是可以不用在锁了？？？
       mutex_.Lock();
       if (sync_error) {
         // The state of the log file is indeterminate: the log record we
@@ -1255,10 +1257,10 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
         RecordBackgroundError(status);
       }
     }
-    // 批量写完后清除tmp_batch
+    //// 批量写完后清除tmp_batch
     if (write_batch == tmp_batch_) tmp_batch_->Clear();
 
-    // 更新seq号
+    //// 更新seq号
     versions_->SetLastSequence(last_sequence);
   }
 
@@ -1266,8 +1268,8 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     Writer* ready = writers_.front();
     writers_.pop_front();
     if (ready != &w) {
-      // 不是当前的写操作但是被合并了的写操作需要通知
-      // 并且设置状态为成功
+      //// 不是当前的写操作但是被合并了的写操作需要通知
+      //// 并且设置状态为成功
       ready->status = status;
       ready->done = true;
       ready->cv.Signal();
@@ -1275,10 +1277,10 @@ Status DBImpl::Write(const WriteOptions& options, WriteBatch* updates) {
     if (ready == last_writer) break;
   }
 
-  // 终于写完成了
+  //// 终于写完成了
   // Notify new head of write queue
   if (!writers_.empty()) {
-    // 如果还有其他写操作在等待，就通知他们可以启动了
+    //// 如果还有其他写操作在等待，就通知他们可以启动了
     writers_.front()->cv.Signal();
   }
 
@@ -1321,7 +1323,7 @@ WriteBatch* DBImpl::BuildBatchGroup(Writer** last_writer) {
         break;
       }
 
-      // 这个逻辑有些绕，可以改进
+      //!! 这个逻辑有些绕，可以改进
       // 先将第一个batch放到空的tmp_batch上
       // Append to *result
       if (result == first->batch) {
@@ -1509,7 +1511,7 @@ Status DB::Open(const Options& options, const std::string& dbname, DB** dbptr) {
   bool save_manifest = false;
   Status s = impl->Recover(&edit, &save_manifest);
   if (s.ok() && impl->mem_ == nullptr) {
-      // 不存在log文件时，重新创建
+      //// 不存在log文件时，重新创建
     // Create new log and a corresponding memtable.
     uint64_t new_log_number = impl->versions_->NewFileNumber();
     WritableFile* lfile;

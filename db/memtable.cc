@@ -88,28 +88,29 @@ void MemTable::Add(SequenceNumber s, ValueType type, const Slice& key,
                              val_size;
   char* buf = arena_.Allocate(encoded_len);
 
-  // 32位长度的空间存储internal_key的长度信息
+  //// 32位长度的空间存储internal_key的长度信息
   char* p = EncodeVarint32(buf, internal_key_size);
 
-  // key_size字节长度的空间存储key内容
+  //// key_size字节长度的空间存储key内容
   memcpy(p, key.data(), key_size);
   p += key_size;
 
-  // 8字节空间存储SequenceNumber和type信息
+  //// 8字节空间存储SequenceNumber和type信息
+  //// sequence比write_batch.rep_少了一个字节，不会有精度的丢失吗？
   EncodeFixed64(p, (s << 8) | type);
   p += 8;
 
-  // 32位长度的空间存储value的长度信息
+  //// 32位长度的空间存储value的长度信息
   p = EncodeVarint32(p, val_size);
 
-  // val_size字节存储value的内容
+  //// val_size字节存储value的内容
   memcpy(p, value.data(), val_size);
   p += val_size;
 
-  // 断言：确定p的位置正确
+  //// 断言：确定p的位置正确
   assert(p == buf + encoded_len);
 
-  // 插入到内存数据库中
+  //// 插入到内存数据库中
   table_.Insert(buf);
 }
 

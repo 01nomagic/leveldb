@@ -38,11 +38,14 @@ void VersionEdit::Clear() {
   new_files_.clear();
 }
 
+//// 将MANIFEST编码
 void VersionEdit::EncodeTo(std::string* dst) const {
+  //// key比较函数
   if (has_comparator_) {
     PutVarint32(dst, kComparator);
     PutLengthPrefixedSlice(dst, comparator_);
   }
+  //// 日志数量
   if (has_log_number_) {
     PutVarint32(dst, kLogNumber);
     PutVarint64(dst, log_number_);
@@ -102,6 +105,7 @@ static bool GetLevel(Slice* input, int* level) {
   }
 }
 
+//// 将MANIFEST解码
 Status VersionEdit::DecodeFrom(const Slice& src) {
   Clear();
   Slice input = src;

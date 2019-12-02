@@ -879,6 +879,7 @@ Status VersionSet::Recover(bool* save_manifest) {
   }
   current.resize(current.size() - 1);
 
+  //// manifest_file_path
   std::string dscname = dbname_ + "/" + current;
   SequentialFile* file;
   s = env_->NewSequentialFile(dscname, &file);
@@ -913,6 +914,7 @@ Status VersionSet::Recover(bool* save_manifest) {
       if (s.ok()) {
         if (edit.has_comparator_ &&
             edit.comparator_ != icmp_.user_comparator()->Name()) {
+          //// 检查key comparator是否一致，同一个数据库应该都一直要一致
           s = Status::InvalidArgument(
               edit.comparator_ + " does not match existing comparator ",
               icmp_.user_comparator()->Name());
@@ -923,6 +925,7 @@ Status VersionSet::Recover(bool* save_manifest) {
         builder.Apply(&edit);
       }
 
+      //// 根据edit设置
       if (edit.has_log_number_) {
         log_number = edit.log_number_;
         have_log_number = true;

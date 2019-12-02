@@ -10,7 +10,10 @@ int main() {
     leveldb::Status status = leveldb::DB::Open(options, "./temp_my_db", &db);
 
     if (status.ok()) {
-        cout << "数据库打开成功" << endl;
+      db->Put(leveldb::WriteOptions(), leveldb::Slice("xxx"), "jjjjjj");
+      db->Put(leveldb::WriteOptions(), leveldb::Slice("xxx2"), "jjjjjj");
+      db->Put(leveldb::WriteOptions(), leveldb::Slice("xxx3"), "jjjjjj");
+      cout << "OK" << endl;
     }
 
     return 0;
