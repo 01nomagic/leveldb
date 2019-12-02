@@ -25,6 +25,7 @@ char* Arena::AllocateFallback(size_t bytes) {
     return result;
   }
 
+  //// 老内存块的剩余可用空间就不用了
   // We waste the remaining space in the current block.
   alloc_ptr_ = AllocateNewBlock(kBlockSize);
   alloc_bytes_remaining_ = kBlockSize;
