@@ -14,6 +14,8 @@ int main() {
       db->Put(leveldb::WriteOptions(), leveldb::Slice("xxx2"), "jjjjjj");
       db->Put(leveldb::WriteOptions(), leveldb::Slice("xxx3"), "jjjjjj");
       cout << "OK" << endl;
+    } else {
+      cout << status.ToString() << endl;
     }
 
     return 0;

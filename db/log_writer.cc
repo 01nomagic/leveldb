@@ -83,6 +83,7 @@ Status Writer::AddRecord(const Slice& slice) {
   return s;
 }
 
+//// 将一个Record数据写入到文件中
 Status Writer::EmitPhysicalRecord(RecordType t, const char* ptr,
                                   size_t length) {
   assert(length <= 0xffff);  // Must fit in two bytes

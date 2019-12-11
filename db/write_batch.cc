@@ -39,6 +39,7 @@ void WriteBatch::Clear() {
 
 size_t WriteBatch::ApproximateSize() const { return rep_.size(); }
 
+//// 一条条操作记录写到内存中去
 Status WriteBatch::Iterate(Handler* handler) const {
   Slice input(rep_);
   if (input.size() < kHeader) {
@@ -48,7 +49,6 @@ Status WriteBatch::Iterate(Handler* handler) const {
   input.remove_prefix(kHeader);
   Slice key, value;
   int found = 0;
-  //// 一条条操作记录写到内容中去
   while (!input.empty()) {
     found++;
     char tag = input[0];
@@ -137,6 +137,7 @@ class MemTableInserter : public WriteBatch::Handler {
 }  // namespace
 
 Status WriteBatchInternal::InsertInto(const WriteBatch* b, MemTable* memtable) {
+  //// 写到内存的handler
   MemTableInserter inserter;
   inserter.sequence_ = WriteBatchInternal::Sequence(b);
   inserter.mem_ = memtable;

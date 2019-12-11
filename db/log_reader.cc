@@ -53,7 +53,12 @@ bool Reader::SkipToInitialBlock() {
   return true;
 }
 
-//// 从文件中读取record
+/**
+ * 从文件中读取record by tin.dev
+ * @param record - 将一个Record的data部分存在这个变量中
+ * @param scratch - 用于暂存Record的first和middle部分，等全部读取后在存到record变量中
+ * @return
+ */
 bool Reader::ReadRecord(Slice* record, std::string* scratch) {
   if (last_record_offset_ < initial_offset_) {
     if (!SkipToInitialBlock()) {

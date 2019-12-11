@@ -353,6 +353,7 @@ Status DBImpl::Recover(VersionEdit* edit, bool* save_manifest) {
         logs.push_back(number);
     }
   }
+  //// 如果MANIFEST记录的文件跟文件系统中存在的文件不匹配，则报错
   if (!expected.empty()) {
     char buf[50];
     snprintf(buf, sizeof(buf), "%d missing files; e.g.",
@@ -430,17 +431,22 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
   int compactions = 0;
   MemTable* mem = nullptr;
   while (reader.ReadRecord(&record, &scratch) && status.ok()) {
+    //// 为什么是12？应该是log文件的要求，太短了是一个无效的log文件
     if (record.size() < 12) {
       reporter.Corruption(record.size(),
                           Status::Corruption("log record too small"));
       continue;
     }
+
+    //// 将record转化为batch
     WriteBatchInternal::SetContents(&batch, record);
 
     if (mem == nullptr) {
       mem = new MemTable(internal_comparator_);
       mem->Ref();
     }
+
+    //// 将batch操作运用到memtable中
     status = WriteBatchInternal::InsertInto(&batch, mem);
     MaybeIgnoreError(&status);
     if (!status.ok()) {
@@ -452,6 +458,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
       *max_sequence = last_seq;
     }
 
+    //// 超了之后写入level0文件
     if (mem->ApproximateMemoryUsage() > options_.write_buffer_size) {
       compactions++;
       *save_manifest = true;
@@ -1511,7 +1518,6 @@ Status DB::Open(const Options& options, const std::string& dbname, DB** dbptr) {
   bool save_manifest = false;
   Status s = impl->Recover(&edit, &save_manifest);
   if (s.ok() && impl->mem_ == nullptr) {
-      //// 不存在log文件时，重新创建
     // Create new log and a corresponding memtable.
     uint64_t new_log_number = impl->versions_->NewFileNumber();
     WritableFile* lfile;
